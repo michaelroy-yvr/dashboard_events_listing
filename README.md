@@ -1,60 +1,84 @@
 # Campaign Dashboard Event Listing Widget
 
-An embeddable widget that displays upcoming volunteer opportunities from a [Campaign Dashboard](https://www.campaigndashboard.app) campaign. Hosted on GitHub Pages, it fetches live shift data and shows each event with its title, date, time, location, and a sign-up link.
+An embeddable widget that displays upcoming volunteer opportunities from a [Campaign Dashboard](https://www.campaigndashboard.app) campaign. It shows each event with its title, date, time, location, and a sign-up link — and it refreshes automatically every time someone loads the page.
 
-Originally built for the Burnaby Citizens Association — but easy to adapt for any Campaign Dashboard campaign.
+Originally built for the Burnaby Citizens Association, but easy to adapt for any Campaign Dashboard campaign. No coding experience required.
 
-## How it works
+---
 
-The page fetches live shift data from the Campaign Dashboard API on each load. No server, build step, or API key required — it's a single static HTML file.
+## Setting this up for your own campaign
 
-## Using this for your own campaign
+You'll need a free [GitHub](https://github.com) account. GitHub is a website that can host simple web pages for free — that's all we're using it for here.
 
-### 1. Fork or clone this repo
+### Step 1: Create a GitHub account (if you don't have one)
 
-**Fork** (easiest): Click the **Fork** button at the top of this GitHub page. This creates a copy under your own GitHub account.
+1. Go to [github.com](https://github.com) and click **Sign up**
+2. Follow the steps to create a free account
 
-**Or clone** and push to a new repo:
-```bash
-git clone https://github.com/michaelroy-yvr/dashboard_events_listing.git
-cd dashboard_events_listing
-# Create a new repo on GitHub, then:
-git remote set-url origin git@github.com:YOUR_USERNAME/YOUR_REPO.git
-git push -u origin main
+### Step 2: Fork this project
+
+"Forking" makes a copy of this project under your own GitHub account, which you can then customize.
+
+1. Make sure you're signed in to GitHub
+2. Go to the top of this page and click the **Fork** button (top-right area)
+3. On the next screen, you can leave everything as-is and click **Create fork**
+
+You now have your own copy of the project.
+
+### Step 3: Find your campaign slug
+
+Your campaign slug is the short code in your Campaign Dashboard URL. For example, if your Campaign Dashboard address is:
+
+```
+https://www.campaigndashboard.app/xyz/campaign/
 ```
 
-### 2. Set your campaign slug
+...then your slug is `xyz`.
 
-Open `index.html` and find this line near the top of the `<script>` block:
+Make a note of it — you'll need it in the next step.
 
-```js
-var CAMPAIGN = 'bca';
+### Step 4: Update the campaign slug in the code
+
+1. In your forked repo, click on the file **`index.html`**
+2. Click the **pencil icon** (Edit this file) near the top-right of the file view
+3. Use your browser's find feature (**Ctrl+F** on Windows, **Cmd+F** on Mac) to search for:
+   ```
+   var CAMPAIGN = 'bca';
+   ```
+4. Replace `bca` with your own campaign slug (from Step 3), keeping the quote marks. For example:
+   ```
+   var CAMPAIGN = 'xyz';
+   ```
+5. Scroll down and click the green **Commit changes** button
+6. In the dialog that appears, click **Commit changes** again to confirm
+
+### Step 5: Enable GitHub Pages
+
+This step publishes your widget as a live web page.
+
+1. In your forked repo, click **Settings** (the tab along the top)
+2. In the left sidebar, click **Pages**
+3. Under **Source**, click the dropdown and select **Deploy from a branch**
+4. Set the branch to **main** and the folder to **/ (root)**
+5. Click **Save**
+
+Within a minute or two, your widget will be live at:
+
+```
+https://YOUR_GITHUB_USERNAME.github.io/dashboard_events_listing/
 ```
 
-Replace `bca` with your campaign's slug — the short code that appears in your Campaign Dashboard URL (e.g. `https://www.campaigndashboard.app/xyz/campaign/` → slug is `xyz`).
+(Replace `YOUR_GITHUB_USERNAME` with your actual GitHub username.)
 
-Save and commit the change:
-```bash
-git add index.html
-git commit -m "Set campaign slug"
-git push
-```
+You can visit that URL to confirm it's working before embedding it.
 
-### 3. Enable GitHub Pages
+### Step 6: Embed the widget on your website
 
-1. Go to your repo on GitHub
-2. Click **Settings** → **Pages**
-3. Under **Source**, select **Deploy from a branch**, choose `main`, folder `/ (root)`, and click **Save**
-
-Your widget will be live at `https://YOUR_USERNAME.github.io/YOUR_REPO/` within a minute or two.
-
-## Embedding
-
-Add this iframe to any page where you want the listing to appear, substituting your own GitHub Pages URL:
+To add the listing to an existing webpage, paste the following code into your site wherever you want the listing to appear. Replace the URL with your own GitHub Pages address from Step 5.
 
 ```html
 <iframe 
-  src="https://YOUR_USERNAME.github.io/YOUR_REPO/" 
+  src="https://YOUR_GITHUB_USERNAME.github.io/dashboard_events_listing/" 
   width="100%" 
   height="500" 
   frameborder="0"
@@ -62,4 +86,10 @@ Add this iframe to any page where you want the listing to appear, substituting y
 </iframe>
 ```
 
-The listing refreshes every time a visitor loads the page, so it always reflects the current shifts in Campaign Dashboard.
+If your website uses a page builder (like Squarespace, Wix, or WordPress), look for an option to add an "Embed" or "HTML" block, and paste the code there.
+
+---
+
+## How it works
+
+When someone visits the page, it fetches the current list of public shifts directly from the Campaign Dashboard API and displays them. No API keys, passwords, or servers are involved — it's a single HTML file.
