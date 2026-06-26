@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Opportunities</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.5;
+            color: #222;
+            background: transparent;
+        }
+
+        .events-list {
+            list-style: none;
+        }
+
+        .event-card {
+            padding: 16px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .event-card:first-child {
+            padding-top: 0;
+        }
+
+        .event-card:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .event-type {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #555;
+            background: #f0f0f0;
+            padding: 2px 7px;
+            border-radius: 3px;
+            margin-bottom: 6px;
+        }
+
+        .event-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 5px;
+        }
+
+        .event-meta {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .event-meta .date {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .event-meta .sep {
+            margin: 0 6px;
+            color: #bbb;
+        }
+
+        .event-location {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .signup-link {
+            display: inline-block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #0066cc;
+            text-decoration: none;
+            border: 1px solid #0066cc;
+            padding: 5px 12px;
+            border-radius: 4px;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .signup-link:hover {
+            background: #0066cc;
+            color: #fff;
+        }
+
+        .state-msg {
+            text-align: center;
+            padding: 28px 0;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .state-error {
+            color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div id="events-container">
+        <div class="state-msg">Loading volunteer opportunities&hellip;</div>
+    </div>
+
+    <script>
+        var API_BASE = 'https://www.campaigndashboard.app';
+        var CAMPAIGN = 'bca';
+
+        // The API stores times in local Pacific time but marks them as Z (UTC).
+        // We parse the date/time components directly to avoid incorrect conversion.
+        function parseComponents(str) {
+            var parts = str.replace('Z', '').split('T');
+            var d = parts[0].split('-').map(Number);
+            var t = parts[1].split(':').map(Number);
+            return { year: d[0], month: d[1], day: d[2], hour: t[0], minute: t[1] };
+        }
+
+        function formatTime(hour, minute) {
+            var period = hour >= 12 ? 'pm' : 'am';
+            var h = hour % 12 || 12;
+            var m = minute > 0 ? ':' + String(minute).padStart(2, '0') : '';
+            return h + m + period;
+        }
+
+        function formatDatetime(startStr, endStr) {
+            var s = parseComponents(startStr);
+            var e = parseComponents(endStr);
+
+            var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            var MONTHS = ['January','February','March','April','May','June',
+                         'July','August','September','October','November','December'];
+
+            var dow = DAYS[new Date(Date.UTC(s.year, s.month - 1, s.day)).getUTCDay()];
+            var date = dow + ', ' + MONTHS[s.month - 1] + ' ' + s.day;
+            var time = formatTime(s.hour, s.minute) + '–' + formatTime(e.hour, e.minute);
+
+            return { date: date, time: time };
+        }
+
+        function esc(str) {
+            if (!str) return '';
+            var d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function buildCard(event) {
+            var dt = formatDatetime(event.start_time, event.end_time);
+            var signupUrl = API_BASE + '/' + CAMPAIGN + '/rsvp/' + event.uuid + '/';
+            var locationText = event.location || event.address || '';
+
+            var li = document.createElement('li');
+            li.className = 'event-card';
+            li.innerHTML =
+                '<div class="event-type">' + esc(event.shift_type) + '</div>' +
+                '<div class="event-title">' + esc(event.title || event.shift_type) + '</div>' +
+                '<div class="event-meta">' +
+                    '<span class="date">' + esc(dt.date) + '</span>' +
+                    '<span class="sep">|</span>' +
+                    '<span class="time">' + esc(dt.time) + '</span>' +
+                '</div>' +
+                (locationText ? '<div class="event-location">' + esc(locationText) + '</div>' : '') +
+                '<a class="signup-link" href="' + signupUrl + '" target="_blank" rel="noopener noreferrer">Sign up</a>';
+
+            return li;
+        }
+
+        function render(events) {
+            var container = document.getElementById('events-container');
+            if (!events || events.length === 0) {
+                container.innerHTML = '<div class="state-msg">No upcoming volunteer opportunities at this time. Check back soon!</div>';
+                return;
+            }
+            var ul = document.createElement('ul');
+            ul.className = 'events-list';
+            events.forEach(function(ev) { ul.appendChild(buildCard(ev)); });
+            container.innerHTML = '';
+            container.appendChild(ul);
+        }
+
+        function appendEvents(events, ul) {
+            events.forEach(function(ev) { ul.appendChild(buildCard(ev)); });
+        }
+
+        function fetchPage(url, ul) {
+            return fetch(url)
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(function(data) {
+                    if (!data.success) throw new Error(data.error || 'API error');
+                    if (ul) {
+                        appendEvents(data.results, ul);
+                    } else {
+                        render(data.results);
+                        ul = document.querySelector('.events-list');
+                    }
+                    if (data.next && ul) {
+                        return fetchPage(data.next, ul);
+                    }
+                });
+        }
+
+        function loadEvents() {
+            var today = new Date().toISOString().split('T')[0];
+            var url = API_BASE + '/api/shifts/?campaign=' + CAMPAIGN + '&start=' + today;
+            fetchPage(url, null).catch(function(err) {
+                console.error('Failed to load events:', err);
+                document.getElementById('events-container').innerHTML =
+                    '<div class="state-msg state-error">Unable to load volunteer opportunities. Please try again later.</div>';
+            });
+        }
+
+        loadEvents();
+    </script>
+</body>
+</html>
